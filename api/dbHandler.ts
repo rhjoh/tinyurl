@@ -7,12 +7,13 @@ const collection = client.db("tinyurl").collection("mappings")
 export async function checkDuplicate(urlValue: string) {
     try {
         await client.connect();
-        const duplicateExistsValue = await collection.findOne({
-            originalUrl: urlValue
-        })
-        console.log(duplicateExistsValue)
+        const duplicateExistsValue = await collection.findOne(
+            { originalUrl: urlValue },
+            { projection: { _id: 0 } }
+        )
+        console.log("Duplicate value?: ", duplicateExistsValue)
         if (duplicateExistsValue) {
-            return duplicateExistsValue.shortCode
+            return duplicateExistsValue
         } else {
             return false;
         }
@@ -28,10 +29,11 @@ export async function matchCodeToURL(shortCode: string) {
 
     try {
         await client.connect()
-        const foundMatch = await collection.findOne({
-            shortCode: shortCode
-        })
-        console.log(foundMatch)
+        const foundMatch = await collection.findOne(
+            { shortCode: shortCode },
+            { projection: { _id: 0 } }
+        )
+        console.log("Test for null" + foundMatch)
         return foundMatch;
     } catch (error) {
         console.log(error)
@@ -43,16 +45,18 @@ export async function matchCodeToURL(shortCode: string) {
 export async function insertURL(urlValue: string, shortCode: string) {
     const mappingObject = {
         originalUrl: urlValue,
-        shortCode: shortCode
+        shortCode: shortCode,
+        shortUrl: `https://rhjo.xyz/${shortCode}`
     }
 
     try {
         await client.connect()
         await collection.insertOne({
             originalUrl: mappingObject.originalUrl,
-            shortCode: mappingObject.shortCode
+            shortCode: mappingObject.shortCode,
+            shortUrl: mappingObject.shortUrl
         })
-        return true;
+        return mappingObject;
     } catch (error) {
         console.log(error)
         return error;
